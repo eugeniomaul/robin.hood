@@ -1,0 +1,12 @@
+Package: robin.hood
+Type: Package
+Title: Explore datasets, Simplify Creation of Baseline Descriptive Tables, Display of Regression Results and other Miscelaneous Functions
+Version: 4.1
+Date: 2026-06-29
+Author: Eugenio A. Maul MD MPH and Maria A Paulos MD MPH. (With some help from Gemini)
+Maintainer: Eugenio Maul <emaul@fola.cl>
+Imports: geepack, nortest, survival, lmerTest, lme4, multcomp
+Description: This package was initially written to facilitate and automate the creation of tables and figures for medical literature publications. Other functions were added later that allow exploring datasets and running analysis that are useful in ophthalmology where there is clustering determined by inclusion of both eyes of individuals in the analyses.
+License: GPL (>= 2)
+NeedsCompilation: no
+Encoding: UTF-8

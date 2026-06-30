@@ -1,0 +1,11 @@
+exportPattern("^[[:alpha:]]+")
+import(geepack)
+import(survival)
+import(lmerTest)
+import(multcomp)
+import(nortest)
+importFrom("grDevices", "dev.copy", "dev.off", "pdf")
+importFrom("graphics", "abline", "axis", "barplot", "boxplot", "hist", "layout", "lines", "mtext", "par", "points", "text")
+importFrom("stats", "aggregate", "aov", "as.formula", "binomial", "chisq.test", "coef", "complete.cases", "confint", "dnorm", "fisher.test", "gaussian", "glm", "kruskal.test", "lm", "qnorm", "quantile", "sd", "shapiro.test", "t.test", "wilcox.test")
+importFrom("utils", "capture.output", "write.table")
+
