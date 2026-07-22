@@ -8,4 +8,5 @@ importFrom("grDevices", "dev.copy", "dev.off", "pdf")
 importFrom("graphics", "abline", "axis", "barplot", "boxplot", "hist", "layout", "lines", "mtext", "par", "points", "text")
 importFrom("stats", "aggregate", "aov", "as.formula", "binomial", "chisq.test", "coef", "complete.cases", "confint", "dnorm", "fisher.test", "gaussian", "glm", "kruskal.test", "lm", "qnorm", "quantile", "sd", "shapiro.test", "t.test", "wilcox.test")
 importFrom("utils", "capture.output", "write.table")
-
+S3method(print, s_tab_display)
+S3method(print, s_summarize_display)
