@@ -6,14 +6,14 @@
 Simplify Creation of Baseline Descriptive Tables and Display of Regression Results
 }
 \description{
- This package was written to facilitate and automate the creation of tables and figures for medical literature publications. Only basic knowledge of R is needed to use this functions.
+ This package was written to facilitate and automate the creation of tables and figures for medical literature publications. Only basic knowledge of R is needed to use these functions. Recent versions add a family of Stata-style commands (prefixed \code{s_}) intended to help users familiar with Stata manage and describe data in R.
 }
 \details{
 \tabular{ll}{
 Package: \tab robin.hood\cr
 Type: \tab Package\cr
-Version: \tab 4.0\cr
-Date: \tab 2018-10-16\cr
+Version: \tab 4.2\cr
+Date: \tab 2026-06-29\cr
 License: \tab GPL (>= 2)\cr
 }
 Functions:
@@ -33,6 +33,24 @@ Both functions t1 and by.t1 functions are also meant to easily provide you with 
 t23 function in this version will allow you to conduct uni and multivariable regression analysis. This function is meant to easily create tables 2 and 3 (hence the function name is t23) of an average paper that reports regression results in the form of a table. In the current version linear regression and logistic regression as well as their gee equivalents are implemented.
 
 ramu.plot function is the best seller of this package. Great for scientific posters, presentations and also for papers where you prefer a visual representation of your regression results in a forest plot like format.
+
+Stata-style commands (the \code{s_} family):
+
+s_rename Renames one or more variables in a dataframe, Stata-style, in place by default.
+
+s_order Reorders variables (columns) in a dataframe, optionally placing them after a chosen variable.
+
+s_keep Keeps only selected variables and/or observations (rows), the latter through an optional condition (Stata's \code{keep if}).
+
+s_drop Drops selected variables and/or observations (rows), the latter through an optional condition (Stata's \code{drop if}).
+
+s_tab Produces one-way frequency tables or cross-tabulations, with optional row/column percentages and chi-squared or Fisher's exact tests.
+
+s_tab1 Produces separate one-way frequency tables for several variables at once.
+
+s_summarize (alias s_su) Produces summary statistics for numeric variables, with preset detail levels or a chosen list of statistics, optionally split by a grouping variable.
+
+Several of the \code{s_} functions modify the dataframe in place in your workspace by default (mirroring Stata), with an \code{overwrite = FALSE} option to instead return a modified copy. The description functions (s_tab, s_tab1, s_summarize) return objects of a shared class intended to be collected and exported together in a future version.
 }
 \author{
 Eugenio A. Maul MD MPH and Maria Angelica Paulos MD MPH
@@ -82,7 +100,6 @@ Rosner B, Glynn RJ. (2017) Estimation of rank correlation for clustered data.
 \code{\link{ramu.plot}} To plot the regression result using a forest plot like format using an object created by the t23 function.
 
 \code{\link{cluster.corr}} To calculate Pearson and Spearman Correlation Coefficient in data with Clustering.
-
 }
 \examples{
 # See help for each of the functions for examples
