@@ -1,6 +1,6 @@
 s_summarize <- function(dataframe, varlist, detail = 1,
                         cont.digits = 2, horizontal = TRUE,
-                        condition, group.var, max.levels = 5,
+                        condition, group.var, max.groups = 5,
                         miss.levels = FALSE, separator = 5,
                         statistics = NULL, verbose = TRUE){
 
@@ -63,9 +63,9 @@ s_summarize <- function(dataframe, varlist, detail = 1,
     }
     gv <- dataframe[[gv.name]]
     if(!is.factor(gv)) gv <- as.factor(as.character(gv))
-    if(nlevels(gv) > max.levels){
+if(nlevels(gv) > max.groups){
       stop(paste("The grouping variable you specified (", gv.name, ") has more than ",
-                 max.levels, " levels. Check it is the right variable, and raise max.levels ",
+                 max.groups, " levels. Check it is the right variable, and raise max.groups ",
                  "to obtain the result.", sep=""))
     }
     group.levels <- levels(gv)
