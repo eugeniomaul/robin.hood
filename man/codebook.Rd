@@ -93,7 +93,8 @@ codebook.example <- codebook(data = drops)
 
 ## 4 exporting the table to excel in spanish compatible file only for some of the variables
 ## code not run
-## codebook.example <- codebook(data = drops, export.table="codebook_test", sep=";", selected.vars=c("age","sex","va_log","iop_prev","md","diffic_level"))
+## codebook.example <- codebook(data = drops, export.table="codebook_test", sep=";", 
+## selected.vars=c("age","sex","va_log","iop_prev","md","diffic_level"))
 
 
 }

@@ -71,7 +71,8 @@ data(pigmentosa)
 corr.result1 <- cluster.corr(pigmentosa, id.var="id", rep.var="rep", 
 x.var="xx", y.var="yy", n.reps=2, n.digits=2)
 
-## 2 calculate pearson and spearman correlation coefficient with adjustment for covariates covar_a and covar_b
+## 2 calculate pearson and spearman correlation coefficient 
+##   with adjustment for covariates covar_a and covar_b
 corr.result2 <- cluster.corr(pigmentosa, id.var="id", rep.var="rep", 
 x.var="xx", y.var="yy", covar.list=c("covar_a","covar_b"), n.reps=2, n.digits=2)
 

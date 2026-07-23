@@ -44,13 +44,15 @@ s_keep Keeps only selected variables and/or observations (rows), the latter thro
 
 s_drop Drops selected variables and/or observations (rows), the latter through an optional condition (Stata's \code{drop if}).
 
-s_tab Produces one-way frequency tables or cross-tabulations, with optional row/column percentages and chi-squared or Fisher's exact tests.
+s_tab Produces one-way frequency tables or cross-tabulations, with counts and percentages on separate rows, optional row/column percentages and chi-squared or Fisher's exact tests.
 
 s_tab1 Produces separate one-way frequency tables for several variables at once.
 
 s_summarize (alias s_su) Produces summary statistics for numeric variables, with preset detail levels or a chosen list of statistics, optionally split by a grouping variable.
 
-Several of the \code{s_} functions modify the dataframe in place in your workspace by default (mirroring Stata), with an \code{overwrite = FALSE} option to instead return a modified copy. The description functions (s_tab, s_tab1, s_summarize) return objects of a shared class intended to be collected and exported together in a future version.
+s_export Collects the results saved from s_tab, s_tab1 and s_summarize and writes them one below the other into a single csv file, ready to review or paste into a manuscript.
+
+Several of the \code{s_} functions modify the dataframe in place in your workspace by default (mirroring Stata), with an \code{overwrite = FALSE} option to instead return a modified copy. The description functions (s_tab, s_tab1, s_summarize) return objects of a shared class that can be collected and written to one file with s_export.
 }
 \author{
 Eugenio A. Maul MD MPH and Maria Angelica Paulos MD MPH

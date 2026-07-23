@@ -65,7 +65,8 @@ inspect.plot(data = drops)
 ## 2 exporting the pdf with a specified name and 4 graphs per page
 ## code not run
 ## inspect.plot(data = drops, graphs.filename = "drops_explore_plots", graphs= 4)
-## will export a file called "drops_explore_plots.pdf" to the working directory with 4 plots per page
+## will export a file called "drops_explore_plots.pdf" 
+## to the working directory with 4 plots per page
 
 
 }

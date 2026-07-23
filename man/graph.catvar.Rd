@@ -3,7 +3,8 @@
 \title{Graph Categorical Variables}
 \description{Internal function for plotting categorical variables.}
 \usage{
-graph.catvar(data = NULL, varname = NULL, out.label = NULL, include.missing = c("no", "yes"), page.rows = NULL, ...)
+graph.catvar(data = NULL, varname = NULL, out.label = NULL, 
+	include.missing = c("no", "yes"), page.rows = NULL, ...)
 }
 \arguments{
   \item{data}{A dataset.}

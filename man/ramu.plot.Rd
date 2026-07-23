@@ -175,7 +175,8 @@ ramu.plot(data = table.2b, xlim.coord = c(log(0.23),log(50)), x.ticks = c(0.25,0
 # 4 Cutomized Plot
 # to change the names of the coefficients you must do so in the t23 object created a priori
 
-table.3 <- t23(data = drops, delete.miss.rows = FALSE, mod.type="multivar", mod.func="gee", model.family="binomial", 
+table.3 <- t23(data = drops, delete.miss.rows = FALSE, 
+	mod.type="multivar", mod.func="gee", model.family="binomial", 
 	y.var="total_success", idvar="idn", 
 	coeff.names =c("Age (per 1 year)", "Female sex (vs male)", 
 	"Visual Acuity (per 10 lines less)", "IOP (per 1 mmHg)", 

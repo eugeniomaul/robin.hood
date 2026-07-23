@@ -14,12 +14,12 @@ laid out with variables in rows or in columns. \code{s_su} is an alias for
 }
 \usage{
 s_summarize(dataframe, varlist, detail = 1, cont.digits = 2,
-            horizontal = TRUE, condition, group.var, max.levels = 5,
+            horizontal = TRUE, condition, group.var, max.groups = 5,
             miss.levels = FALSE, separator = 5, statistics = NULL,
             verbose = TRUE)
 
 s_su(dataframe, varlist, detail = 1, cont.digits = 2,
-     horizontal = TRUE, condition, group.var, max.levels = 5,
+     horizontal = TRUE, condition, group.var, max.groups = 5,
      miss.levels = FALSE, separator = 5, statistics = NULL,
      verbose = TRUE)
 }
@@ -45,9 +45,9 @@ s_su(dataframe, varlist, detail = 1, cont.digits = 2,
   are FALSE or missing are excluded.}
   \item{group.var}{optional. A grouping variable (given unquoted) by which results
   are split into separate tables. If not a factor it is converted to one.}
-  \item{max.levels}{the maximum number of levels the grouping variable may have.
+  \item{max.groups}{the maximum number of levels the grouping variable may have.
   If it has more, the function stops with a message suggesting you check the
-  variable or raise \code{max.levels}. Default 5.}
+  variable or raise \code{max.groups}. Default 5.}
   \item{miss.levels}{if FALSE (the default) observations with a missing value of
   the grouping variable are not given their own table. If TRUE a separate table is
   produced for the missing group.}
@@ -69,15 +69,17 @@ Returned invisibly: an object of class \code{s_describe}, a list with elements
 \code{tables} and \code{call.info}, in the same structure produced by
 \code{\link{s_tab}}. Each entry in \code{tables} contains the formatted
 \code{display} table and a numeric \code{stats.matrix} of the underlying values.
-The shared \code{s_describe} class lets the object be passed, alongside
-\code{s_tab}/\code{s_tab1} objects, to a future export function that stacks several
-results into a single spreadsheet.
+The shared \code{s_describe} class allows the object to be passed to
+\code{\link{s_export}}, alongside \code{s_tab} and \code{s_tab1} results, to be
+written into a single spreadsheet file.
 }
 \author{
 Eugenio A. Maul MD MPH and Maria Angelica Paulos MD MPH
 }
 \seealso{
 \code{\link{s_tab}} and \code{\link{s_tab1}} For frequency tables of categorical variables.
+
+\code{\link{s_export}} To export several saved results into one csv file.
 
 \code{\link{t1}} To summarize mixed variable types in a compact table.
 

@@ -76,22 +76,28 @@ table.1.1 <- t1(data = drops)
 ## table.1; - to see the function results in deatil, code not run
 
 ## 2 using more options
-table.1.2 <- t1(data = drops,selected.vars = c("age","sex","va_log",
-	"iop_prev","md","diffic_level"),
-	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
-	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),cont.var="auto")
+table.1.2 <- t1(data = drops,
+	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
+	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", 
+	"Baseline IOP (mmHg)", "Mean Deviation (dB)", 
+	"Difficulty for Eyedrop Use"),cont.var="auto")
 
 ## 3 using even more options
-table.1.3 <- t1(data = drops,selected.vars = c("age","sex","va_log",
-	"iop_prev","md","diffic_level"),
+table.1.3 <- t1(data = drops,
+	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
 	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
-	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),table.na="no", cont.var="manual",manual.mean=c(TRUE,NA,FALSE,TRUE,TRUE,NA))
+	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),
+	table.na="no", cont.var="manual", 
+	manual.mean=c(TRUE,NA,FALSE,TRUE,TRUE,NA))
 
 ## 4 exporting the table in #3 using the sep = ";" option suitable for reading in MS Excel in Chile 
 ##	code not run
-##	table.1.3 <- t1(data = drops,selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
-##			var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
-##			"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),table.na="no", cont.var="manual",
+##	table.1.3 <- t1(data = drops,
+##	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
+##			var.names=c("Age (years)","Sex","Visual Acuity (logMar)",
+##           "Baseline IOP (mmHg)", 
+##			"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),
+##          table.na="no", cont.var="manual",
 ##			manual.mean=c(T,NA,F,T,T,NA), export.table="table1_example", sep=";")
 
 }
