@@ -1,8 +1,8 @@
 Package: robin.hood
 Type: Package
 Title: Explore datasets, Simplify Creation of Baseline Descriptive Tables, Display of Regression Results and other Miscelaneous Functions
-Version: 4.2
-Date: 2026-07-22
+Version: 4.3
+Date: 2026-08-23
 Author: Eugenio A. Maul MD MPH and Maria A Paulos MD MPH. (With some help from Gemini and Claude)
 Maintainer: Eugenio Maul <emaul@fola.cl>
 Imports: geepack, nortest, survival, lmerTest, lme4, multcomp
