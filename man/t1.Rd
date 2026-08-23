@@ -19,10 +19,10 @@ t1(data = NA, selected.vars = NULL, var.names = NA,
 an object of class data.frame containing the variables you wish to describe.
 }
   \item{selected.vars}{
-a character vector specifying which variables in the dataframe you want to describe. Setting the auto.convert to TRUE will automatically convert to factor string variables with less than 10 levels and exclude from the analysis string variables with 10 or more levels. (i.e. selected.vars = c("age","sex")) 
+the variables in the dataframe you want to describe. These may be given without quotes (i.e. \code{selected.vars = c(age, sex)}), with quotes (i.e. \code{selected.vars = c("age","sex")}), or as a previously created character vector holding the names. Setting auto.convert to TRUE will automatically convert to factor string variables with less than 10 levels and exclude from the analysis string variables with 10 or more levels.
 }
   \item{var.names}{
-variable names and levels are often not suitable for a publication table. This character vector allows you to specify variable names and levels manually. It is recommended that you first run the function with this argument set to default = NA, then you can decide which names you want to change in the same order as printed in the Summary. You do not need to change all the names/ levels. The length of this vector does not need to be the same as the number of rows in the Summary. (i.e. A summary has the following rows: age, sex, sex_1male, sex_2female, race, race_1white, race_2asian, you only want to change the name for the 3rd and 4th rows then specify var.names = c(NA,NA,"Female","Male")) 
+variable names and levels are often not suitable for a publication table. This character vector allows you to specify variable names and levels manually, and should always be given in quotes, since these are display labels (which may contain spaces) rather than column names. It is recommended that you first run the function with this argument set to default = NA, then you can decide which names you want to change in the same order as printed in the Summary. You do not need to change all the names/ levels. The length of this vector does not need to be the same as the number of rows in the Summary. (i.e. A summary has the following rows: age, sex, sex_1male, sex_2female, race, race_1white, race_2asian, you only want to change the name for the 3rd and 4th rows then specify var.names = c(NA,NA,"Female","Male")) 
 }
   \item{table.na}{
 this argument applies to factor variables in the same way as for the table function in the base package. The default option ifany allows a more detailed description of the data. Although you will often set this option to no for the final publication table.
@@ -45,6 +45,14 @@ if you provide a name, (i.e. export.table = "table1") instead of the default val
   \item{sep}{
 separator for the csv file, if want to export to a csv file easily read by excel and you live in latin-america and use microsoft office in spanish use sep = ";"
 }
+}
+\note{
+The \code{selected.vars} argument may be supplied without quotes, with quotes,
+or as a previously created character vector. If you have an object in your
+workspace whose name matches a column you intend to reference unquoted, the value
+of that object is used; in that unusual case, quote the column names to avoid
+ambiguity. The \code{var.names} argument is different: it holds display labels
+(which may contain spaces and punctuation), so it must always be given in quotes.
 }
 \value{
 A list with 3 matrices is generate by function t1: Continuous.Variables, Categorical.Variables and Summary
@@ -75,30 +83,22 @@ data(drops)
 table.1.1 <- t1(data = drops)
 ## table.1; - to see the function results in deatil, code not run
 
-## 2 using more options
-table.1.2 <- t1(data = drops,
-	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
-	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", 
-	"Baseline IOP (mmHg)", "Mean Deviation (dB)", 
-	"Difficulty for Eyedrop Use"),cont.var="auto")
-
-## 3 using even more options
-table.1.3 <- t1(data = drops,
-	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
+## 2 using more options (selected.vars quoted, as before)
+table.1.2 <- t1(data = drops,selected.vars = c("age","sex","va_log",
+	"iop_prev","md","diffic_level"),
 	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
-	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),
-	table.na="no", cont.var="manual", 
-	manual.mean=c(TRUE,NA,FALSE,TRUE,TRUE,NA))
+	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),cont.var="auto")
 
-## 4 exporting the table in #3 using the sep = ";" option suitable for reading in MS Excel in Chile 
-##	code not run
-##	table.1.3 <- t1(data = drops,
-##	selected.vars = c("age","sex","va_log","iop_prev","md","diffic_level"),
-##			var.names=c("Age (years)","Sex","Visual Acuity (logMar)",
-##           "Baseline IOP (mmHg)", 
-##			"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),
-##          table.na="no", cont.var="manual",
-##			manual.mean=c(T,NA,F,T,T,NA), export.table="table1_example", sep=";")
+## 3 the same selection with unquoted variable names
+table.1.3 <- t1(data = drops,selected.vars = c(age, sex, va_log,
+	iop_prev, md, diffic_level),
+	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
+	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),cont.var="auto")
+
+## 4 using even more options
+table.1.4 <- t1(data = drops,selected.vars = c(age, sex, va_log,
+	iop_prev, md, diffic_level),
+	var.names=c("Age (years)","Sex","Visual Acuity (logMar)", "Baseline IOP (mmHg)", 
+	"Mean Deviation (dB)", "Difficulty for Eyedrop Use"),table.na="no", cont.var="manual",manual.mean=c(TRUE,NA,FALSE,TRUE,TRUE,NA))
 
 }
-

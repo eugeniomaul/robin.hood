@@ -24,7 +24,7 @@ an object of class data.frame containing the variables you wish to describe.
 if set to TRUE (the default) logical variables will be transformed to factor variables, string variables with less than 10 levels will be transformed to factors (otherwise excluded from the data) and levels of factor variables with 0 counts will be excluded.
 }
   \item{selected.vars}{
-a character vector specifying which variables in the dataframe you want to describe. Do not include the y.var name in this vector, and if you are running gee, do not include the idvar name in this vector either. (i.e. selected.vars = c("age","sex")) 
+the variables in the dataframe you want to include as predictors. These may be given without quotes (i.e. \code{selected.vars = c(age, sex)}), with quotes (i.e. \code{selected.vars = c("age","sex")}), or as a previously created character vector holding the names. Do not include the y.var name in this vector, and if you are running gee, do not include the idvar name in this vector either.
 }
   \item{delete.miss.rows}{
 "FALSE" the default value for this argument. In this case missing values will be excluded on a variable-by-variable basis. 
@@ -43,18 +43,18 @@ is specified only in the event of gee.
 "gaussian" (the default) for linear regression gee and 
 "binomial" for logistic regression gee.}
   \item{y.var}{
-y variable or dependent variable for the analysis of interest. This variable must be part of the dataframe. 
+y variable or dependent variable for the analysis of interest. This variable must be part of the dataframe. It may be given without quotes (i.e. \code{y.var = total_success}) or with quotes (i.e. \code{y.var = "total_success"}). 
 For "cox" regression y.var is left as NA.
 }
   \item{idvar}{
-id variable is used only in the event of gee to specify the cluster. (i.e. in an analysis where you include both eyes of some or all patients the cluster is the patient, and you must create a numeric variable that identifies each subject) It must be a numeric variable.
+id variable is used only in the event of gee to specify the cluster. (i.e. in an analysis where you include both eyes of some or all patients the cluster is the patient, and you must create a numeric variable that identifies each subject) It must be a numeric variable. It may be given without quotes (i.e. \code{idvar = idn}) or with quotes (i.e. \code{idvar = "idn"}).
 }
   \item{time.var}{
-this numeric variable is used only for cox regression. It represents time from initial observation to the occurence of an event. 
+this numeric variable is used only for cox regression. It represents time from initial observation to the occurence of an event. It may be given without quotes or with quotes.
 In case no event is observed for a subject, then time represents the end of followup.
 }
   \item{event.var}{
-this numeric variable is used only for cox regression.
+this numeric variable is used only for cox regression. It may be given without quotes or with quotes.
 It should be coded as:
 0 = no event
 1 = event
@@ -83,6 +83,16 @@ separator for the csv file, if want to export to a csv file easily read by excel
 }
   \item{\dots}{
 optional arguments}
+}
+\note{
+The variable-name arguments (\code{y.var}, \code{idvar}, \code{time.var},
+\code{event.var} and \code{selected.vars}) may be supplied without quotes,
+with quotes, or (for \code{selected.vars}) as a previously created character
+vector. If you have an object in your workspace whose name is the same as a
+column you intend to reference unquoted, the value of that object is used; in
+that unusual case, quote the column name to avoid ambiguity. The keyword
+arguments \code{mod.type}, \code{mod.func} and \code{model.family} must still be
+given in quotes.
 }
 \value{
 For univariable models (model.type="univar")
@@ -131,11 +141,19 @@ Eugenio A. Maul MD MPH and Maria Angelica Paulos MD MPH
 \examples{
 data(drops)
 
-## 1 Simple Example
+## 1 Simple Example (quoted, as before)
 table.2 <- t23(data = drops, delete.miss.rows=TRUE, mod.type="univar", 
 	mod.func="gee", model.family="binomial", y.var="total_success", idvar="idn")
 
 table.3 <- t23(data = drops, delete.miss.rows=TRUE, mod.type="multivar", 
 	mod.func="gee", model.family="binomial", y.var="total_success", idvar="idn")
 
+## 2 The same univariable model with unquoted variable names
+table.2b <- t23(data = drops, delete.miss.rows=TRUE, mod.type="univar", 
+	mod.func="gee", model.family="binomial", y.var=total_success, idvar=idn)
+
+## 3 Selecting predictors without quotes
+table.2c <- t23(data = drops, delete.miss.rows=TRUE, mod.type="univar", 
+	mod.func="gee", model.family="binomial", y.var=total_success, idvar=idn,
+	selected.vars = c(age, sex, md))
 }

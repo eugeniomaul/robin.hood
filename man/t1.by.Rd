@@ -21,16 +21,16 @@ t1.by(data = NA, selected.vars = NULL, group.var = NA,
 an object of class data.frame containing the variables you wish to describe.
 }
   \item{selected.vars}{
-a character vector specifying which variables in the dataframe you want to describe. Setting the auto.convert to TRUE will automatically convert to factor string variables with less than 10 levels and exclude from the analysis string variables with 10 or more levels. (i.e. selected.vars = c("age","sex")) 
+the variables in the dataframe you want to describe. These may be given without quotes (i.e. \code{selected.vars = c(age, sex)}), with quotes (i.e. \code{selected.vars = c("age","sex")}), or as a previously created character vector holding the names. Setting auto.convert to TRUE will automatically convert to factor string variables with less than 10 levels and exclude from the analysis string variables with 10 or more levels.
 }
   \item{group.var}{
-a character vector specifying the name of the grouping variable by which you want to describe your data. This variable must be in the dataframe you specify for the data argument. 
+the grouping variable by which you want to describe your data. It may be given without quotes (i.e. \code{group.var = total_success}) or with quotes (i.e. \code{group.var = "total_success"}). This variable must be in the dataframe you specify for the data argument.
 }
   \item{miss.group}{
 if miss group is set to TRUE (default is FALSE) an extra column will be added with those that have missing data for the grouping variable.
 }
   \item{var.names}{
-variable names and levels are often not suitable for a publication table. This character vector allows you to specify variable names and levels manually. It is recommended that you first run the function with this argument set to default = NA, then you can decide which names you want to change in the same order as printed in the Summary. You do not need to change all the names/ levels. The length of this vector does not need to be the same as the number of rows in the Summary. (i.e. A summary has the following rows: age, sex, sex_1male, sex_2female, race, race_1white, race_2asian, you only want to change the name for the 3rd and 4th rows then specify var.names = c(NA,NA,"Female","Male")) 
+variable names and levels are often not suitable for a publication table. This character vector allows you to specify variable names and levels manually, and should always be given in quotes, since these are display labels (which may contain spaces) rather than column names. It is recommended that you first run the function with this argument set to default = NA, then you can decide which names you want to change in the same order as printed in the Summary. You do not need to change all the names/ levels. The length of this vector does not need to be the same as the number of rows in the Summary. (i.e. A summary has the following rows: age, sex, sex_1male, sex_2female, race, race_1white, race_2asian, you only want to change the name for the 3rd and 4th rows then specify var.names = c(NA,NA,"Female","Male")) 
 }
   \item{table.na}{
 this argument applies to factor variables in the same way as for the table function in the base package. The default option ifany allows a more detailed description of the data. Although you will often set this option to no for the final publication table.
@@ -59,6 +59,15 @@ separator for the csv file, if want to export to a csv file easily read by excel
 \item{categ.test}{Select "fisher" or "chi2" for categorical variables.
 }
 }
+\note{
+The variable-name arguments \code{selected.vars} and \code{group.var} may be
+supplied without quotes, with quotes, or (for \code{selected.vars}) as a
+previously created character vector. If you have an object in your workspace whose
+name matches a column you intend to reference unquoted, the value of that object
+is used; in that unusual case, quote the column name to avoid ambiguity. The
+\code{var.names} argument is different: it holds display labels (which may contain
+spaces and punctuation), so it must always be given in quotes.
+}
 \value{
 A list with 3 matrices is generate by function t1: Continuous.Variables, Categorical.Variables and Summary
   \item{Continuous.Variables}{Matrix with summary measures for all continuous variables including non.missing observations, mean, sd, median, p25, p75, min, max, p.value for shapiro.wilk test and lilliefors test}
@@ -84,30 +93,32 @@ Eugenio A. Maul MD MPH and Maria Angelica Paulos MD MPH
 \examples{
 data(drops)
 
-## 1 Simple Example
+## 1 Simple Example (group.var quoted)
 grouped.table.1 <- t1.by(data = drops, group.var="total_success")
 
-## 2 More advanced example
+## 2 The same with group.var unquoted
+grouped.table.2 <- t1.by(data = drops, group.var=total_success)
+
+## 3 More advanced example with unquoted variable selection
 data(drops)
 drops2 <- drops; drops2$total_success <- as.character(drops2$total_success) ; 
 	x <- drops2$total_success;
 drops2$total_success[x=="0"] <- "Success = No"; drops2$total_success[x=="1"] <- "Success = Yes"; 
 drops2$total_success <- as.factor(drops2$total_success)  
-grouped.table.1 <- t1.by(data = drops2 , group.var="total_success", 
-	selected.vars = c("age","sex","va_log", "eye", "md"), 
+grouped.table.3 <- t1.by(data = drops2 , group.var=total_success, 
+	selected.vars = c(age, sex, va_log, eye, md), 
 	var.names=c("Age (years)", "Sex", "Visual Acuity (LogMar)", "Eye", "Mean Deviation (dB)"), 
 	table.na = "no")
 
-## 3 Same as before, but export the table
+## 4 Same as before, but export the table
 data(drops)
 drops2 <- drops; drops2$total_success <- as.character(drops2$total_success) ; 
 x <- drops2$total_success;
 drops2$total_success[x=="0"] <- "Success = No"; 
 drops2$total_success[x=="1"] <- "Success = Yes"; 
 drops2$total_success <- as.factor(drops2$total_success)  
-grouped.table.1 <- t1.by(data = drops2 , group.var="total_success", 
-	selected.vars = c("age","sex","va_log", "eye", "md"), 
+grouped.table.4 <- t1.by(data = drops2 , group.var=total_success, 
+	selected.vars = c(age, sex, va_log, eye, md), 
 	var.names=c("Age (years)", "Sex", "Visual Acuity (LogMar)", "Eye", "Mean Deviation (dB)"), 
 	table.na = "no", export.table = "Test_grouped_table")
-
 }
