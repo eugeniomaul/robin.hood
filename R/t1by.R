@@ -3,7 +3,13 @@ t1.by <- function(data=NA, selected.vars=NULL, group.var=NA, miss.group=FALSE, v
   cont.var = match.arg(cont.var)
   table.na = match.arg(table.na)
   categ.test = match.arg(categ.test)
-  
+
+  ## --- Capture variable-name arguments, allowing unquoted, quoted, or a
+  ##     pre-built name-holding vector -----------------------------------------
+  eval.env      <- parent.frame()
+  selected.vars <- .s_capture_flex(substitute(selected.vars), eval.env, default = NULL)
+  group.var     <- .s_capture_flex(substitute(group.var),     eval.env, default = NA)
+
   data <- as.data.frame(data) 
 
   if(!is.null(selected.vars)){

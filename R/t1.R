@@ -3,6 +3,10 @@ t1 <- function(data=NA, selected.vars=NULL, var.names=NA, table.na=c("ifany","no
   cont.var = match.arg(cont.var)
   table.na = match.arg(table.na)
 
+  ## --- Capture variable-name argument, allowing unquoted, quoted, or a
+  ##     pre-built name-holding vector -----------------------------------------
+  selected.vars <- .s_capture_flex(substitute(selected.vars), parent.frame(), default = NULL)
+
   data <- as.data.frame(data)
 
   if(!is.null(selected.vars)){

@@ -4,6 +4,16 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
   model.family = match.arg(model.family)
   sep = match.arg(sep)
 
+  ## --- Capture Group A variable-name arguments, allowing unquoted, quoted, or
+  ##     pre-built name-holding variables. Keyword options (mod.type/mod.func/
+  ##     model.family) stay quoted via match.arg above. -----------------------
+  eval.env      <- parent.frame()
+  y.var         <- .s_capture_flex(substitute(y.var),        eval.env, default = NA)
+  idvar         <- .s_capture_flex(substitute(idvar),        eval.env, default = NA)
+  time.var      <- .s_capture_flex(substitute(time.var),     eval.env, default = NULL)
+  event.var     <- .s_capture_flex(substitute(event.var),    eval.env, default = NULL)
+  selected.vars <- .s_capture_flex(substitute(selected.vars), eval.env, default = NULL)
+
   if(mod.func=="cox"){
     if(!is.null(selected.vars) & !is.na(idvar)){
       data <- subset(data,select=c(selected.vars,idvar, time.var,event.var))

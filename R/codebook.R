@@ -3,6 +3,10 @@ codebook <- function(data=NA, blanks=c("separate","missing"), selected.vars=NULL
   blanks = match.arg(blanks)
   sep = match.arg(sep)
 
+  ## --- Capture variable-name argument, allowing unquoted, quoted, or a
+  ##     pre-built name-holding vector -----------------------------------------
+  selected.vars <- .s_capture_flex(substitute(selected.vars), parent.frame(), default = NULL)
+
   data <- as.data.frame(data)
 
   if(!is.null(selected.vars)){
