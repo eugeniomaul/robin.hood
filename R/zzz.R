@@ -1,7 +1,7 @@
 .onAttach <- function(libname, pkgname) {
 packageStartupMessage("
 ##################################################################
-Robin Hood Package version 4.2
+Robin Hood Package version 4.3
 A package to help you become friends with R!
 Developed by:
 Maria Angelica Paulos MD MPH
