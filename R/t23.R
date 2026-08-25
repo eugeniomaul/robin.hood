@@ -13,8 +13,9 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
   time.var      <- .s_capture_flex(substitute(time.var),     eval.env, default = NULL)
   event.var     <- .s_capture_flex(substitute(event.var),    eval.env, default = NULL)
   selected.vars <- .s_capture_flex(substitute(selected.vars), eval.env, default = NULL)
+  data <- as.data.frame(data)          # <- ADD THIS: ensures tibbles behave like data.frames
 
-  if(mod.func=="cox"){
+    if(mod.func=="cox"){
     if(!is.null(selected.vars) & !is.na(idvar)){
       data <- subset(data,select=c(selected.vars,idvar, time.var,event.var))
     }else if(!is.null(selected.vars) & is.na(idvar)){
