@@ -9,7 +9,7 @@ t23 function in this version will allow you to conduct uni and multivariable reg
 \usage{
 t23(data = NA, y.var = NA, idvar = NA, 
     mod.type = c("univar", "multivar"), 
-    mod.func = c("lm", "logistic", "gee", "cox"), 
+    mod.func = c("lm", "logistic", "gee", "cox", "poisson", "nbreg"),
     model.family = c("gaussian", "binomial"), cor = "exchangeable", 
     time.var = NULL, event.var = NULL, export.table = NA, 
     sep = c(",", ";"), auto.convert = TRUE, selected.vars = NULL, 
@@ -35,8 +35,11 @@ the variables in the dataframe you want to include as predictors. These may be g
 "multivar" option in contrast will generate a multivariable regression results table.
 }
   \item{mod.func}{
-"lm" (the default)will conduct linear regression analysis. "logistic" will run logistic regression using glm function. 
+"lm" (the default) will conduct linear regression analysis. "logistic" will run logistic regression using the glm function.
 "gee" will lead to generalized estimating equations in cases of correlated data. Only if "gee" is chosen you need to specify "model.family" and "idvar". You can also change the correlation structure specification with the "cor" argument.
+"cox" runs Cox proportional hazards regression; specify "time.var" and "event.var" (and optionally "idvar" for clustered data).
+"poisson" runs Poisson regression for count outcomes, reporting Incidence Rate Ratios (IRR). If "idvar" is supplied a Poisson GEE is fitted, whose robust standard errors accommodate clustering (for example two eyes per patient). The Pearson dispersion statistic is reported; a value well above 1 suggests overdispersion and that "nbreg" may fit better.
+"nbreg" runs negative binomial regression for overdispersed count outcomes, also reporting IRR. The overdispersion parameter theta (and alpha = 1/theta, as reported by Stata's nbreg) is estimated automatically from the data and printed. Negative binomial regression with clustering is not currently supported; use "poisson" with "idvar" for clustered counts.
 }
   \item{model.family}{
 is specified only in the event of gee. 
@@ -93,6 +96,12 @@ column you intend to reference unquoted, the value of that object is used; in
 that unusual case, quote the column name to avoid ambiguity. The keyword
 arguments \code{mod.type}, \code{mod.func} and \code{model.family} must still be
 given in quotes.
+}
+\note{
+For "poisson" and "nbreg", coefficients are exponentiated and reported as
+Incidence Rate Ratios (IRR) with 95 percent Wald confidence intervals. Model
+diagnostics (the Poisson dispersion statistic; the negative binomial theta and
+alpha) are printed as messages when the model is fitted.
 }
 \value{
 For univariable models (model.type="univar")
@@ -156,4 +165,11 @@ table.2b <- t23(data = drops, delete.miss.rows=TRUE, mod.type="univar",
 table.2c <- t23(data = drops, delete.miss.rows=TRUE, mod.type="univar", 
 	mod.func="gee", model.family="binomial", y.var=total_success, idvar=idn,
 	selected.vars = c(age, sex, md))
+## Poisson regression for a count outcome, reporting IRR
+## table.p <- t23(data = my.data, y.var = n_events, mod.type = "multivar",
+##                mod.func = "poisson", selected.vars = c(age, sex))
+
+## Negative binomial for an overdispersed count outcome
+## table.nb <- t23(data = my.data, y.var = n_events, mod.type = "multivar",
+##                 mod.func = "nbreg", selected.vars = c(age, sex))
 }
