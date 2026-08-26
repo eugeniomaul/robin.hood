@@ -1,21 +1,26 @@
-t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), mod.func= c("lm","logistic","gee","cox"), model.family = c("gaussian","binomial"), cor="exchangeable", time.var=NULL, event.var=NULL, export.table=NA, sep = c(",",";"), auto.convert=TRUE, selected.vars=NULL, delete.miss.rows=FALSE, coeff.names=NA, coeff.digits=2, p.digits=3, trim.digits=FALSE, ...) {
+t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), mod.func= c("lm","logistic","gee","cox","poisson","nbreg"), model.family = c("gaussian","binomial"), cor="exchangeable", time.var=NULL, event.var=NULL, export.table=NA, sep = c(",",";"), auto.convert=TRUE, selected.vars=NULL, delete.miss.rows=FALSE, coeff.names=NA, coeff.digits=2, p.digits=3, trim.digits=FALSE, ...) {
   mod.type = match.arg(mod.type)
   mod.func = match.arg(mod.func)
   model.family = match.arg(model.family)
   sep = match.arg(sep)
 
   ## --- Capture Group A variable-name arguments, allowing unquoted, quoted, or
-  ##     pre-built name-holding variables. Keyword options (mod.type/mod.func/
-  ##     model.family) stay quoted via match.arg above. -----------------------
+  ##     pre-built name-holding variables. -----------------------------------
   eval.env      <- parent.frame()
   y.var         <- .s_capture_flex(substitute(y.var),        eval.env, default = NA)
   idvar         <- .s_capture_flex(substitute(idvar),        eval.env, default = NA)
   time.var      <- .s_capture_flex(substitute(time.var),     eval.env, default = NULL)
   event.var     <- .s_capture_flex(substitute(event.var),    eval.env, default = NULL)
   selected.vars <- .s_capture_flex(substitute(selected.vars), eval.env, default = NULL)
-  data <- as.data.frame(data)          # <- ADD THIS: ensures tibbles behave like data.frames
 
-    if(mod.func=="cox"){
+  data <- as.data.frame(data)
+
+  ## --- Guard: negative binomial does not support clustering (GEE) in t23. ---
+  if(mod.func=="nbreg" & !is.na(idvar)){
+    stop("Negative binomial regression with clustering (idvar) is not supported. Use mod.func='poisson' with idvar for a Poisson GEE, whose robust standard errors handle clustering.")
+  }
+
+  if(mod.func=="cox"){
     if(!is.null(selected.vars) & !is.na(idvar)){
       data <- subset(data,select=c(selected.vars,idvar, time.var,event.var))
     }else if(!is.null(selected.vars) & is.na(idvar)){
@@ -94,6 +99,28 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
         uni.formula <- as.formula(paste("y.var ~ ",x,sep=""))
         glm(uni.formula,data=data,family="binomial")
       })
+    } else if(mod.func=="poisson"){
+      if(is.na(idvarname)){
+        uni.models <- lapply(varnames,function(x){
+          uni.formula <- as.formula(paste("y.var ~ ",x,sep=""))
+          glm(uni.formula,data=data,family="poisson")
+        })
+      } else {
+        uni.models <- lapply(varnames,function(x){
+          valid.data <- !is.na(y.var) & !is.na(data[[x]]) & !is.na(idvarname)
+          data2 <- data[valid.data, , drop=FALSE]
+          data2$y.var2 <- y.var[valid.data]
+          data2$idvar2 <- idvar[valid.data]
+          data2 <- data2[order(data2$idvar2), ]
+          uni.formula <- as.formula(paste("y.var2 ~ ",x,sep=""))
+          suppressMessages(geepack::geeglm(uni.formula, data=data2, family=poisson, id=idvar2, corstr=cor))
+        })
+      }
+    } else if(mod.func=="nbreg"){
+      uni.models <- lapply(varnames,function(x){
+        uni.formula <- as.formula(paste("y.var ~ ",x,sep=""))
+        MASS::glm.nb(uni.formula,data=data)
+      })
     } else if(mod.func=="gee"){
       uni.models <- lapply(varnames,function(x){
         valid.data <- !is.na(y.var) & !is.na(data[[x]]) & !is.na(idvarname)
@@ -131,9 +158,37 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
         cbind(summary(x)$coefficients,confint(x))
       })
       uni.coeff <- do.call(rbind,uni.model.summary)
-      uni.coeff <- as.matrix(uni.coeff) # FIXED: Matrix enforcement
+      uni.coeff <- as.matrix(uni.coeff)
       uni.coeff <- uni.coeff[rownames(uni.coeff)!="(Intercept)", c(1,5,6,4), drop=FALSE]
       colnames(uni.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+    } else if(mod.func=="poisson" | mod.func=="nbreg"){
+      if(is.na(idvarname)){
+        ## plain glm / glm.nb : use Wald CIs (confint.default) for speed and
+        ## Stata consistency
+        uni.model.summary <- lapply(uni.models,function(x){
+          cbind(summary(x)$coefficients, confint.default(x))
+        })
+        uni.coeff <- do.call(rbind,uni.model.summary)
+        uni.coeff <- as.matrix(uni.coeff)
+        uni.coeff <- uni.coeff[rownames(uni.coeff)!="(Intercept)", c(1,5,6,4), drop=FALSE]
+        colnames(uni.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+      } else {
+        ## Poisson GEE
+        uni.model.summary <- lapply(uni.models,function(x){
+          model.coeff <- as.matrix(summary(x)$coefficients)
+          estimate <- model.coeff[,1]
+          std.err <- model.coeff[,2]
+          ci.95 <- std.err * qnorm(0.975)
+          p.val <- model.coeff[,4]
+          res <- matrix(c(estimate, estimate - ci.95, estimate + ci.95, p.val), ncol=4)
+          rownames(res) <- rownames(model.coeff)
+          return(res)
+        })
+        uni.coeff <- do.call(rbind,uni.model.summary)
+        uni.coeff <- as.matrix(uni.coeff)
+        uni.coeff <- uni.coeff[rownames(uni.coeff)!="(Intercept)", , drop=FALSE]
+        colnames(uni.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+      }
     } else if(mod.func=="gee"){
       uni.model.summary <- lapply(uni.models,function(x){
         model.coeff <- as.matrix(summary(x)$coefficients)
@@ -146,7 +201,7 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
         return(res)
       })
       uni.coeff <- do.call(rbind,uni.model.summary)
-      uni.coeff <- as.matrix(uni.coeff) # FIXED: Matrix enforcement
+      uni.coeff <- as.matrix(uni.coeff)
       uni.coeff <- uni.coeff[rownames(uni.coeff)!="(Intercept)", , drop=FALSE]
       colnames(uni.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")	
     } else if(mod.func=="cox"){
@@ -156,26 +211,32 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
         return(model.coeff)
       })
       uni.coeff <- do.call(rbind,uni.model.summary)
-      uni.coeff <- as.matrix(uni.coeff) # FIXED: Matrix enforcement
+      uni.coeff <- as.matrix(uni.coeff)
       p.title <- ifelse(!is.na(idvarname), "robust.p.value", "p.value")
       colnames(uni.coeff) <- c("HR","CI.95.Inf","CI.95.Sup",p.title)
     }
 
     if(mod.func=="logistic" | model.family=="binomial"){
-      uni.table.a <- format(round(exp(uni.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      uni.table.a <- format(round(exp(uni.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       uni.table <- cbind(paste(uni.table.a[,1]," (", uni.table.a[,2],", ", uni.table.a[,3],")",sep=""), uni.table.b)
       rownames(uni.table) <- rownames(uni.coeff)
       colnames(uni.table) <- c("OR (95% CI)","p value")	
+    } else if(mod.func=="poisson" | mod.func=="nbreg"){
+      uni.table.a <- format(round(exp(uni.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
+      uni.table <- cbind(paste(uni.table.a[,1]," (", uni.table.a[,2],", ", uni.table.a[,3],")",sep=""), uni.table.b)
+      rownames(uni.table) <- rownames(uni.coeff)
+      colnames(uni.table) <- c("IRR (95% CI)","p value")	
     } else if((mod.func=="lm" | (mod.func=="gee" & model.family=="gaussian")) ){
-      uni.table.a <- format(round(uni.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      uni.table.a <- format(round(uni.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       uni.table <- cbind(paste(uni.table.a[,1]," (", uni.table.a[,2],", ", uni.table.a[,3],")",sep=""), uni.table.b)
       rownames(uni.table) <- rownames(uni.coeff)
       colnames(uni.table) <- c("Beta (95% CI)","p value")	
     } else if(mod.func=="cox" ){
-      uni.table.a <- format(round(uni.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      uni.table.a <- format(round(uni.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      uni.table.b <- format(round(uni.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       uni.table <- cbind(paste(uni.table.a[,1]," (", uni.table.a[,2],", ", uni.table.a[,3],")",sep=""), uni.table.b)
       rownames(uni.table) <- rownames(uni.coeff)
       p.title <- ifelse(!is.na(idvarname), "robust.p.value", "p.value")
@@ -189,6 +250,23 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
       for(i in 1:nrow(uni.table)){
         if(!is.na(coeff.names[i])) row.names(uni.table)[i] <- coeff.names[i]
       }
+    }
+
+    ## --- Diagnostics for count models (dispersion for Poisson; theta/alpha
+    ##     for NB), shown as messages, not user inputs. ------------------------
+    if(mod.func=="poisson" & is.na(idvarname)){
+      disp <- sapply(uni.models, function(m) sum(residuals(m, type="pearson")^2)/df.residual(m))
+      names(disp) <- varnames
+      message("Poisson dispersion (Pearson chi2 / df) per univariable model:")
+      for(nm in names(disp)) message("  ", nm, ": ", format(round(disp[nm],2),nsmall=2),
+                                     if(disp[nm] > 1.5) "  (overdispersed; consider mod.func='nbreg')" else "")
+    }
+    if(mod.func=="nbreg"){
+      thetas <- sapply(uni.models, function(m) m$theta)
+      names(thetas) <- varnames
+      message("Negative binomial theta (and alpha = 1/theta) per univariable model:")
+      for(nm in names(thetas)) message("  ", nm, ": theta = ", format(round(thetas[nm],3),nsmall=3),
+                                       ", alpha = ", format(round(1/thetas[nm],3),nsmall=3))
     }
 
     print.title <- "Univariable Regression Results"
@@ -215,6 +293,22 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
     } else if(mod.func=="logistic"){
       multi.formula <- as.formula(paste("y.var ~ ",paste(varnames,collapse=" + "),sep=""))
       model <-  glm(multi.formula,data=data,family="binomial")
+    } else if(mod.func=="poisson"){
+      if(is.na(idvarname)){
+        multi.formula <- as.formula(paste("y.var ~ ",paste(varnames,collapse=" + "),sep=""))
+        model <- glm(multi.formula,data=data,family="poisson")
+      } else {
+        valid.data <- !is.na(y.var) & !is.na(idvar) & (rowSums(is.na(data))==0)
+        data2 <- data[valid.data, , drop=FALSE]
+        data2$y.var2 <- y.var[valid.data]
+        data2$idvar2 <- idvar[valid.data]
+        data2 <- data2[order(data2$idvar2), ]
+        multi.formula <- as.formula(paste("y.var2 ~ ",paste(varnames,collapse=" + "),sep=""))
+        suppressMessages(model <- geepack::geeglm(multi.formula, data=data2, family=poisson, id=idvar2, corstr=cor))
+      }
+    } else if(mod.func=="nbreg"){
+      multi.formula <- as.formula(paste("y.var ~ ",paste(varnames,collapse=" + "),sep=""))
+      model <- MASS::glm.nb(multi.formula,data=data)
     } else if(mod.func=="gee"){
       valid.data <- !is.na(y.var) & !is.na(idvar) & (rowSums(is.na(data))==0)
       data2 <- data[valid.data, , drop=FALSE]
@@ -244,9 +338,26 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
 
     if(mod.func=="lm" | mod.func=="glm" | mod.func=="logistic"){
       multi.coeff <- cbind(summary(model)$coefficients,confint(model))
-      multi.coeff <- as.matrix(multi.coeff) # FIXED: Matrix enforcement
+      multi.coeff <- as.matrix(multi.coeff)
       multi.coeff <- multi.coeff[rownames(multi.coeff)!="(Intercept)", c(1,5,6,4), drop=FALSE]
       colnames(multi.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+    } else if(mod.func=="poisson" | mod.func=="nbreg"){
+      if(is.na(idvarname)){
+        multi.coeff <- cbind(summary(model)$coefficients, confint.default(model))
+        multi.coeff <- as.matrix(multi.coeff)
+        multi.coeff <- multi.coeff[rownames(multi.coeff)!="(Intercept)", c(1,5,6,4), drop=FALSE]
+        colnames(multi.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+      } else {
+        model.coeff <- as.matrix(summary(model)$coefficients)
+        estimate <- model.coeff[,1]
+        std.err <- model.coeff[,2]
+        ci.95 <- std.err * qnorm(0.975)
+        p.val <- model.coeff[,4]
+        multi.coeff <- matrix(c(estimate, estimate - ci.95, estimate + ci.95, p.val), ncol=4)
+        rownames(multi.coeff) <- rownames(model.coeff)
+        multi.coeff <- multi.coeff[rownames(multi.coeff)!="(Intercept)", , drop=FALSE]
+        colnames(multi.coeff) <- c("Estimate","CI.95.Inf","CI.95.Sup","p.value")
+      }
     } else if(mod.func=="gee"){
       model.coeff <- as.matrix(summary(model)$coefficients)
       estimate <- model.coeff[,1]
@@ -260,27 +371,33 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
     } else if(mod.func=="cox"){
       cox.s <- summary(model)
       multi.coeff <- cbind(cox.s$conf.int[,1], cox.s$conf.int[,3],cox.s$conf.int[,4],cox.s$coefficients[,ncol(cox.s$coefficients)])
-      multi.coeff <- as.matrix(multi.coeff) # FIXED: Matrix enforcement
+      multi.coeff <- as.matrix(multi.coeff)
       rownames(multi.coeff) <- rownames(cox.s$conf.int)
       p.title <- ifelse(!is.na(idvarname), "robust.p.value", "p.value")
       colnames(multi.coeff) <- c("HR","CI.95.Inf","CI.95.Sup",p.title)
     }
 
     if(mod.func=="logistic" | model.family=="binomial"){
-      multi.table.a <- format(round(exp(multi.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      multi.table.a <- format(round(exp(multi.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       multi.table <- cbind(paste(multi.table.a[,1]," (", multi.table.a[,2],", ", multi.table.a[,3],")",sep=""), multi.table.b)
       rownames(multi.table) <- rownames(multi.coeff)
       colnames(multi.table) <- c("OR (95% CI)","p value")	
+    } else if(mod.func=="poisson" | mod.func=="nbreg"){
+      multi.table.a <- format(round(exp(multi.coeff[,1:3, drop=FALSE]),digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
+      multi.table <- cbind(paste(multi.table.a[,1]," (", multi.table.a[,2],", ", multi.table.a[,3],")",sep=""), multi.table.b)
+      rownames(multi.table) <- rownames(multi.coeff)
+      colnames(multi.table) <- c("IRR (95% CI)","p value")	
     } else if((mod.func=="lm" | (mod.func=="gee" & model.family=="gaussian")) ){
-      multi.table.a <- format(round(multi.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      multi.table.a <- format(round(multi.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       multi.table <- cbind(paste(multi.table.a[,1]," (", multi.table.a[,2],", ", multi.table.a[,3],")",sep=""), multi.table.b)
       rownames(multi.table) <- rownames(multi.coeff)
       colnames(multi.table) <- c("Beta (95% CI)","p value")	
     } else if(mod.func=="cox" ){
-      multi.table.a <- format(round(multi.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits)
-      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits)
+      multi.table.a <- format(round(multi.coeff[,1:3, drop=FALSE],digits=coeff.digits),nsmall=coeff.digits,trim=trim.digits,scientific=FALSE)
+      multi.table.b <- format(round(multi.coeff[,4],digits=p.digits),nsmall=p.digits,trim=trim.digits,scientific=FALSE)
       multi.table <- cbind(paste(multi.table.a[,1]," (", multi.table.a[,2],", ", multi.table.a[,3],")",sep=""), multi.table.b)
       rownames(multi.table) <- rownames(multi.coeff)
       p.title <- ifelse(!is.na(idvarname), "robust.p.value", "p.value")
@@ -294,6 +411,17 @@ t23 <- function(data=NA, y.var=NA, idvar=NA, mod.type = c("univar","multivar"), 
       for(i in 1:nrow(multi.table)){
         if(!is.na(coeff.names[i])) row.names(multi.table)[i] <- coeff.names[i]
       }
+    }
+
+    ## --- Diagnostics for count models ---------------------------------------
+    if(mod.func=="poisson" & is.na(idvarname)){
+      disp <- sum(residuals(model, type="pearson")^2)/df.residual(model)
+      message("Poisson dispersion (Pearson chi2 / df) = ", format(round(disp,2),nsmall=2),
+              if(disp > 1.5) "  (overdispersed; consider mod.func='nbreg')" else "")
+    }
+    if(mod.func=="nbreg"){
+      message("Negative binomial theta = ", format(round(model$theta,3),nsmall=3),
+              ", alpha = 1/theta = ", format(round(1/model$theta,3),nsmall=3))
     }
 
     print.title <- "Multivariable Regression Results"
